@@ -1,2 +1,4 @@
 log
 bot.pid
+*.swp
+cpp/*.o
