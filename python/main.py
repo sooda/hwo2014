@@ -14,7 +14,7 @@ class NoobBot(object):
         self.send(json.dumps({"msgType": msg_type, "data": data}))
 
     def send(self, msg):
-        self.socket.send(msg + "\n")
+        self.socket.sendall(msg + "\n")
 
     def join(self):
         return self.msg("join", {"name": self.name,

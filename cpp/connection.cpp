@@ -16,13 +16,15 @@ hwo_connection::~hwo_connection()
 
 jsoncons::json hwo_connection::receive_response(boost::system::error_code& error)
 {
-  boost::asio::read_until(socket, response_buf, "\n", error);
+  auto len = boost::asio::read_until(socket, response_buf, "\n", error);
   if (error)
   {
     return jsoncons::json();
   }
-  std::istream s(&response_buf);
-  return jsoncons::json::parse(s);
+  auto buf = response_buf.data();
+  std::string reply(boost::asio::buffers_begin(buf), boost::asio::buffers_begin(buf) + len);
+  response_buf.consume(len);
+  return jsoncons::json::parse_string(reply);
 }
 
 void hwo_connection::send_requests(const std::vector<jsoncons::json>& msgs)
