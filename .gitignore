@@ -1,4 +1,6 @@
 log
 bot.pid
 *.swp
-cpp/*.o
+*.swo
+*.swn
+*.vis

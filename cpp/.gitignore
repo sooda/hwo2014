@@ -1,1 +1,4 @@
 plusbot
+tests
+*.d
+*.o
