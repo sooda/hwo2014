@@ -1,4 +1,5 @@
 #include "game_logic.h"
+#include "game_objs.h"
 #include "protocol.h"
 
 using namespace hwo_protocol;
@@ -35,6 +36,14 @@ game_logic::msg_vector game_logic::react(const jsoncons::json& msg)
 game_logic::msg_vector game_logic::on_join(const jsoncons::json& data)
 {
   std::cout << "Joined" << std::endl;
+  return { make_ping() };
+}
+
+game_logic::msg_vector game_logic::on_game_init(const jsoncons::json& data)
+{
+  std::cout << "Game init" << std::endl;
+  auto trj = data["race"]["track"];
+  auto tr = trj.as<Track>();
   return { make_ping() };
 }
 

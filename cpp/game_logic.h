@@ -22,6 +22,7 @@ private:
 
   msg_vector on_join(const jsoncons::json& data);
   msg_vector on_game_start(const jsoncons::json& data);
+  msg_vector on_game_init(const jsoncons::json& data);
   msg_vector on_car_positions(const jsoncons::json& data);
   msg_vector on_crash(const jsoncons::json& data);
   msg_vector on_game_end(const jsoncons::json& data);
