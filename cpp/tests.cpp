@@ -21,7 +21,21 @@ void obj_parse_test() {
   cout << tr.lanes << endl;
 }
 
+void keimola_dump() {
+  Track kei = json::parse_file("keimola.json").as<Track>();
+  double totlen1 = 0.0;
+  double totlen2 = 0.0;
+  for (Piece p: kei.track) {
+    cout << p << endl;
+    totlen1 += p.travel(10.0);
+    totlen2 += p.travel(-10.0);
+  }
+  cout << "lane lenghts " << totlen1 << " and " << totlen2 << endl;
+}
+
+
 int main() {
   obj_parse_test();
+  keimola_dump();
   return 0;
 }

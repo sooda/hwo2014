@@ -1,8 +1,8 @@
-BOT_SRCS := connection.cpp game_logic.cpp main.cpp protocol.cpp
+BOT_SRCS := connection.cpp game_logic.cpp main.cpp protocol.cpp game_objs.cpp
 TEST_SRCS := game_objs.cpp tests.cpp
 CXX := g++
 
-CXXFLAGS := -std=c++11 -Wall -Wextra -Ijsoncons/src
+CXXFLAGS := -std=c++11 -Wall -Wextra -Ijsoncons/src -g
 # jsoncons full of these
 CXXFLAGS += -Wno-unused-parameter
 

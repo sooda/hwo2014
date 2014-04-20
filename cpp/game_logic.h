@@ -1,12 +1,19 @@
 #ifndef HWO_GAME_LOGIC_H
 #define HWO_GAME_LOGIC_H
 
+#include "game_objs.h"
 #include <string>
 #include <vector>
 #include <map>
 #include <functional>
 #include <iostream>
 #include <jsoncons/json.hpp>
+
+struct Player {
+  CarPosition prev;
+  double tottravel;
+  int nticks;
+};
 
 class game_logic
 {
@@ -27,6 +34,9 @@ private:
   msg_vector on_crash(const jsoncons::json& data);
   msg_vector on_game_end(const jsoncons::json& data);
   msg_vector on_error(const jsoncons::json& data);
+
+  Track track;
+  Player mycar;
 };
 
 #endif

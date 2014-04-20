@@ -7,6 +7,6 @@ std::ostream& operator<<(std::ostream& os, Piece p) {
     os << "[bend " << p.radius << " angle " << p.angle;
   }
   if (p.switch_) os << " switch";
-  os << "]";
+  os << " travel " << p.travel(0) << "]";
   return os;
 }
