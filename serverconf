@@ -1,0 +1,2 @@
+export BOTSERVERNAME=testserver.helloworldopen.com
+export BOTSERVERPORT=8091
