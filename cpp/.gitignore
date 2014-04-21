@@ -2,3 +2,4 @@ plusbot
 tests
 *.d
 *.o
+rawlog.txt

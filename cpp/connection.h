@@ -5,6 +5,7 @@
 #include <iostream>
 #include <boost/asio.hpp>
 #include <jsoncons/json.hpp>
+#include <fstream>
 
 using boost::asio::ip::tcp;
 
@@ -20,6 +21,7 @@ private:
   boost::asio::io_service io_service;
   tcp::socket socket;
   boost::asio::streambuf response_buf;
+  std::ofstream rawlog;
 };
 
 #endif
