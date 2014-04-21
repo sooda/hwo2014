@@ -13,7 +13,10 @@ game_logic::game_logic()
       { "crash", &game_logic::on_crash },
       { "gameEnd", &game_logic::on_game_end },
       { "error", &game_logic::on_error }
-    }
+    },
+    track { {}, 0 },
+    mycar { { "", "", 0.0, 0, 0.0, 0, 0 }, 0.0, 0 },
+    current_tick { -1 }
 {
 }
 
@@ -22,15 +25,26 @@ game_logic::msg_vector game_logic::react(const jsoncons::json& msg)
   const auto& msg_type = msg["msgType"].as<std::string>();
   const auto& data = msg["data"];
   int tick = msg.get("gameTick", -1).as<int>();
+
   std::cout << "msg tick " << tick << std::endl;
+  if (tick != -1)
+    current_tick = tick;
+
   auto action_it = action_map.find(msg_type);
   if (action_it != action_map.end())
   {
-    return (action_it->second)(this, data);
+    msg_vector act = (action_it->second)(this, data);
+    if (tick != -1 && act.size() == 0) {
+      std::cout << "BUG: got tick but did no actions" << std::endl;
+      act = { make_ping() };
+    }
+    return act;
   }
   else
   {
     std::cout << "Unknown message type: " << msg_type << std::endl;
+    if (tick == -1)
+      return {};
     return { make_ping() };
   }
 }
@@ -38,7 +52,7 @@ game_logic::msg_vector game_logic::react(const jsoncons::json& msg)
 game_logic::msg_vector game_logic::on_join(const jsoncons::json& data)
 {
   std::cout << "Joined" << std::endl;
-  return { make_ping() };
+  return { };
 }
 
 game_logic::msg_vector game_logic::on_game_init(const jsoncons::json& data)
@@ -58,16 +72,21 @@ game_logic::msg_vector game_logic::on_game_init(const jsoncons::json& data)
       << cars[i]["id"]["color"]
       << std::endl;
   }
-
-  mycar = { {"","",0.0,0,0.0,0,0}, 0.0, 0 };
-
-  return { make_ping() };
+  return { };
 }
 
 game_logic::msg_vector game_logic::on_game_start(const jsoncons::json& data)
 {
   std::cout << "Race started" << std::endl;
-  return { make_ping() };
+
+  // (a carpositions with no ticks might come before the start so that starts
+  // includes the first tick)
+
+  // we'd probably like to just go full speed here
+  if (current_tick < 1)
+    return { make_throttle(compute_throttle()) };
+  // not started yet? no commands
+  return { };
 }
 
 game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
@@ -111,7 +130,18 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
   mycar.prev = now;
   mycar.nticks++;
 
-  return { make_throttle(mycar.nticks & 64 ? 0.0 : 0.6) };
+  // first positions may come before start
+  if (current_tick == -1)
+    return {};
+
+  return { make_throttle(compute_throttle()) };
+}
+
+double game_logic::compute_throttle()
+{
+  int estim_interval = 10 * 60;
+  double speed = std::min((mycar.nticks / estim_interval + 1) / 10.0, 0.7);
+  return mycar.nticks%estim_interval < estim_interval/2 ? speed : 0.0;
 }
 
 game_logic::msg_vector game_logic::on_crash(const jsoncons::json& data)

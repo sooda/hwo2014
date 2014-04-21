@@ -35,8 +35,11 @@ private:
   msg_vector on_game_end(const jsoncons::json& data);
   msg_vector on_error(const jsoncons::json& data);
 
+  double compute_throttle();
+
   Track track;
   Player mycar;
+  int current_tick;
 };
 
 #endif
