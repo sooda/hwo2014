@@ -10,20 +10,20 @@ struct Piece {
   double radius, angle; // bend
   bool switch_;
 
-  double travel(double fromcenter) {
-    // will need lane distance from center information in bends
-    // approximate for now
-    if (length)
+  double travel(double fromcenter) const {
+    if (length) {
+      // straight
       return length;
-
-    if (angle < 0) {
+    } else if (angle >= 0) {
+      // right turn
+      // a positive value is "to the right", i.e. shortens the travel
+      return 2 * 3.14159265 * (radius - fromcenter) * angle / 360;
+    } else {
       // left turn
-      angle = -angle;
-      fromcenter = -fromcenter;
+      // positive value increases the travel here as it's the outer lane
+      return 2 * 3.14159265 * (radius + fromcenter) * -angle / 360;
     }
-    // fromcenter reduces the radius in right turns
-    // turning left, a negative fromcenter is further away
-    return 2 * 3.14159265 * (radius - fromcenter) * angle / 360;
+
     // how about switch pieces?
   }
 };

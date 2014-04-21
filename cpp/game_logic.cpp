@@ -21,6 +21,8 @@ game_logic::msg_vector game_logic::react(const jsoncons::json& msg)
 {
   const auto& msg_type = msg["msgType"].as<std::string>();
   const auto& data = msg["data"];
+  int tick = msg.get("gameTick", -1).as<int>();
+  std::cout << "msg tick " << tick << std::endl;
   auto action_it = action_map.find(msg_type);
   if (action_it != action_map.end())
   {
@@ -98,16 +100,18 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
   std::cout
     << "ticks " << mycar.nticks
     << " current piece " << now.pieceIndex
+    << " piece travel " << track.track[now.pieceIndex].travel(-10)
+    << " in piece travel " << now.inPieceDistance
     << " total traveled: " << mycar.tottravel
     << ", this travel: " << travel
     << " speed: " << speed << std::endl;
 
-  std::cerr << mycar.nticks << " " << mycar.tottravel << " " << travel << " " << speed << std::endl;
+  std::cerr << mycar.nticks << " " << mycar.tottravel << " " << travel << " " << speed << " " << now.pieceIndex << std::endl;
 
   mycar.prev = now;
   mycar.nticks++;
 
-  return { make_throttle(0.6) };
+  return { make_throttle(mycar.nticks & 64 ? 0.0 : 0.6) };
 }
 
 game_logic::msg_vector game_logic::on_crash(const jsoncons::json& data)
