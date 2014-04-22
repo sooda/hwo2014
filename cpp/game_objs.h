@@ -32,7 +32,8 @@ std::ostream& operator<<(std::ostream& os, Piece p);
 
 struct Track {
   std::vector<Piece> track;
-  int lanes; // are their indices needed or just the count?
+  std::array<double, 4> lanedist; // distance from center
+  int nlanes;
 };
 
 struct CarPosition {
@@ -68,10 +69,17 @@ class value_adapter<char, Storage, Track> {
       return true;
     }
     Track as(const basic_json<char, Storage>& val) const {
-      auto lanes  = val["lanes"] .template as<json::array>();
       auto pieces = val["pieces"].template as<std::vector<Piece>>();
+      auto lanes  = val["lanes"] .template as<json::array>();
+
+      std::array<double, 4> dists = {0.0};
+      // should be 1..4 lanes but min() to be safe
+      for (size_t i = 0; i < std::min(lanes.size(), 4UL); i++)
+        dists[lanes[i]["index"].template as<int>()] = lanes[i]["distanceFromCenter"].template as<double>();
+
       return Track{
         pieces,
+        dists,
         (int)lanes.size()
       };
     }

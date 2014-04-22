@@ -14,7 +14,7 @@ game_logic::game_logic()
       { "gameEnd", &game_logic::on_game_end },
       { "error", &game_logic::on_error }
     },
-    track { {}, 0 },
+    track { {}, { 0.0 }, 0 },
     mycar { { "", "", 0.0, 0, 0.0, 0, 0 }, 0.0, 0 },
     current_tick { -1 }
 {
@@ -63,7 +63,11 @@ game_logic::msg_vector game_logic::on_game_init(const jsoncons::json& data)
   for (auto& piece: track.track) {
     std::cout << piece << std::endl;
   }
-  std::cout << track.track.size() << " pieces in total, lane count " << track.lanes << std::endl;
+  std::cout << track.track.size() << " pieces in total, lane count " << track.nlanes << std::endl;
+  std::cout << "lane dists";
+  for (auto& x: track.lanedist)
+    std::cout << " " << x;
+  std::cout << std::endl;
 
   auto cars = data["race"]["cars"];
   for (size_t i = 0; i < cars.size(); i++) {
@@ -102,13 +106,15 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
   std::cout << std::endl;
 
   CarPosition& now = positions[0]; // XXX parse my color
+  // TODO lane switching
+  double lanedist = track.lanedist[now.startLane];
 
   double travel;
   if (now.pieceIndex == mycar.prev.pieceIndex) {
     travel = now.inPieceDistance - mycar.prev.inPieceDistance;
   } else {
     // changed piece between ticks
-    double last_remaining = track.track[mycar.prev.pieceIndex].travel(-10) - mycar.prev.inPieceDistance;
+    double last_remaining = track.track[mycar.prev.pieceIndex].travel(lanedist) - mycar.prev.inPieceDistance;
     double in_this = now.inPieceDistance;
     travel = last_remaining + in_this;
   }
@@ -119,7 +125,7 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
   std::cout
     << "ticks " << mycar.nticks
     << " current piece " << now.pieceIndex
-    << " piece travel " << track.track[now.pieceIndex].travel(-10)
+    << " piece travel " << track.track[now.pieceIndex].travel(lanedist)
     << " in piece travel " << now.inPieceDistance
     << " total traveled: " << mycar.tottravel
     << ", this travel: " << travel
