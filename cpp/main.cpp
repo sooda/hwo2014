@@ -7,10 +7,14 @@
 
 using namespace hwo_protocol;
 
-void run(hwo_connection& connection, const std::string& name, const std::string& key)
+void run(hwo_connection& connection, const std::string& name,
+    const std::string& key, const std::string& track = "")
 {
   game_logic game;
-  connection.send_requests({ make_join(name, key) });
+  if (track == "")
+    connection.send_requests({ make_join(name, key) });
+  else
+    connection.send_requests({ make_create_single(name, key, track) });
 
   for (;;)
   {
@@ -35,9 +39,9 @@ int main(int argc, const char* argv[])
 {
   try
   {
-    if (argc != 5)
+    if (argc < 5 || argc > 6)
     {
-      std::cerr << "Usage: ./run host port botname botkey" << std::endl;
+      std::cerr << "Usage: ./run host port botname botkey [trackname]" << std::endl;
       return 1;
     }
 
@@ -45,10 +49,11 @@ int main(int argc, const char* argv[])
     const std::string port(argv[2]);
     const std::string name(argv[3]);
     const std::string key(argv[4]);
-    std::cout << "Host: " << host << ", port: " << port << ", name: " << name << ", key:" << key << std::endl;
+    const std::string track(argv[5] ? argv[5] : "");
+    std::cout << "Host: " << host << ", port: " << port << ", name: " << name << ", key: " << key << ", track: " << track << std::endl;
 
     hwo_connection connection(host, port);
-    run(connection, name, key);
+    run(connection, name, key, track);
   }
   catch (const std::exception& e)
   {

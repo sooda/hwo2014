@@ -19,6 +19,17 @@ namespace hwo_protocol
     return make_request("join", data);
   }
 
+  jsoncons::json make_create_single(const std::string& name, const std::string& key, const std::string& track)
+  {
+    jsoncons::json data;
+    data["botId"] = jsoncons::json();
+    data["botId"]["name"] = name;
+    data["botId"]["key"] = key;
+    data["trackName"] = track;
+    data["carCount"] = 1;
+    return make_request("createRace", data);
+  }
+
   jsoncons::json make_ping()
   {
     return make_request("ping", jsoncons::null_type());
