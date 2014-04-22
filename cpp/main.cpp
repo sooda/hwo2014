@@ -52,7 +52,7 @@ int main(int argc, const char* argv[])
     const std::string track(argv[5] ? argv[5] : "");
     std::cout << "Host: " << host << ", port: " << port << ", name: " << name << ", key: " << key << ", track: " << track << std::endl;
 
-    hwo_connection connection(host, port);
+    hwo_connection connection(host, port, track);
     run(connection, name, key, track);
   }
   catch (const std::exception& e)

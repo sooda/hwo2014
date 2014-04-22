@@ -12,7 +12,7 @@ using boost::asio::ip::tcp;
 class hwo_connection
 {
 public:
-  hwo_connection(const std::string& host, const std::string& port);
+  hwo_connection(const std::string& host, const std::string& port, const std::string& logname);
   ~hwo_connection();
   jsoncons::json receive_response(boost::system::error_code& error);
   void send_requests(const std::vector<jsoncons::json>& msgs);

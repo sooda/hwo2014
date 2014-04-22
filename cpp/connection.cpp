@@ -1,13 +1,13 @@
 #include "connection.h"
 
-hwo_connection::hwo_connection(const std::string& host, const std::string& port)
+hwo_connection::hwo_connection(const std::string& host, const std::string& port, const std::string& logname)
   : socket(io_service)
 {
   tcp::resolver resolver(io_service);
   tcp::resolver::query query(host, port);
   boost::asio::connect(socket, resolver.resolve(query));
   response_buf.prepare(8192);
-  rawlog.open("rawlog.txt");
+  rawlog.open("rawlog" + logname + ".txt");
 }
 
 hwo_connection::~hwo_connection()
