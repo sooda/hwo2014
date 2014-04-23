@@ -4,3 +4,5 @@ bot.pid
 *.swo
 *.swn
 *.vis
+stdout*
+stderr*

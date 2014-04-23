@@ -120,18 +120,22 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
   }
   double ticktime = 1.0 / 60;
   double speed = travel / ticktime;
+  double angspeed = mycar.prev.angle - now.angle;
   mycar.tottravel += travel;
 
   std::cout
     << "ticks " << mycar.nticks
-    << " current piece " << now.pieceIndex
-    << " piece travel " << track.track[now.pieceIndex].travel(lanedist)
-    << " in piece travel " << now.inPieceDistance
-    << " total traveled: " << mycar.tottravel
+    << ", current index " << now.pieceIndex
+    << ", current travel " << track.track[now.pieceIndex].travel(lanedist)
+    << ", piece travel " << now.inPieceDistance
+    << ", total traveled: " << mycar.tottravel
     << ", this travel: " << travel
-    << " speed: " << speed << std::endl;
+    << ", speed: " << speed
+    << ", angle: " << now.angle
+    << ", angular speed: " << angspeed
+    << std::endl;
 
-  std::cerr << mycar.nticks << " " << mycar.tottravel << " " << travel << " " << speed << " " << now.pieceIndex << std::endl;
+  std::cerr << mycar.nticks << " " << mycar.tottravel << " " << travel << " " << speed << " " << now.pieceIndex << " " << now.angle << " " << angspeed << std::endl;
 
   mycar.prev = now;
   mycar.nticks++;
