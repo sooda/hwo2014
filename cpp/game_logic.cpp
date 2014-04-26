@@ -88,7 +88,7 @@ game_logic::msg_vector game_logic::on_game_start(const jsoncons::json& data)
 
   // we'd probably like to just go full speed here
   if (current_tick < 1)
-    return { make_throttle(compute_throttle()) };
+    return { make_throttle(compute_throttle(), 0) };
   // not started yet? no commands
   return { };
 }
@@ -137,6 +137,8 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
 
   std::cerr << mycar.nticks << " " << mycar.tottravel << " " << travel << " " << speed << " " << now.pieceIndex << " " << now.angle << " " << angspeed << std::endl;
 
+  double throttle = compute_throttle();
+
   mycar.prev = now;
   mycar.nticks++;
 
@@ -144,10 +146,10 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
   if (current_tick == -1)
     return {};
 
-  return { make_throttle(compute_throttle()) };
+  return { make_throttle(throttle, mycar.nticks - 1) };
 }
 
-double game_logic::compute_throttle()
+double game_logic::compute_throttle() const
 {
   int estim_interval = 10 * 60;
   double speed = std::min((mycar.nticks / estim_interval + 1) / 10.0, 0.7);

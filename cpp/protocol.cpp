@@ -35,9 +35,11 @@ namespace hwo_protocol
     return make_request("ping", jsoncons::null_type());
   }
 
-  jsoncons::json make_throttle(double throttle)
+  jsoncons::json make_throttle(double throttle, int tick)
   {
-    return make_request("throttle", throttle);
+    jsoncons::json req(make_request("throttle", throttle));
+    req["gameTick"] = tick;
+    return req;
   }
 
 }  // namespace hwo_protocol
