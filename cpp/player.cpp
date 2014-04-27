@@ -39,14 +39,28 @@ double Player::compute_throttle(const CarPosition& now) const {
 #if 0
   return throttle_for_speed((nticks / 200) * topspeed() / 10.0);
 #endif
-  // assume so far that no bend after the next one needs remarkably slower speed
-  int next = next_bend(now.pieceIndex);
-  double topspeed = speed_for_bend(track->track[next].radius);
-  double dist_to_next = dist_to_piece(now, next);
+  // safest throttle based on all the future track.
+  // probably do not need to look ahead the whole track, but what the hell
+  double best_throttle = 1.0;
+  // track has >= 1 pieces for sure
+  for (size_t i = 0; i < track->track.size() - 1; i++) {
+    double thr = throttle_for_piece(now, i);
+    best_throttle = std::min(best_throttle, thr);
+  }
+  return best_throttle;
+}
 
-  if (dist_to_next == 0.0) // already in this bend
+double Player::throttle_for_piece(const CarPosition& now, int lookahead) const {
+  int next = (now.pieceIndex + lookahead) % track->track.size();
+  // straights do not need braking
+  if (track->track[next].length != 0.0)
+    return 1.0;
+
+  double topspeed = speed_for_bend(track->track[next].radius);
+  if (lookahead == 0) // already in this bend
     return throttle_for_speed(topspeed);
 
+  double dist_to_next = dist_to_piece(now, next);
   int ticks = ticks_to_slow_down(curspeed, topspeed);
   double brake_dist = brake_travel(curspeed, ticks);
 
@@ -95,7 +109,7 @@ int Player::ticks_to_slow_down(double cur, double target) const {
 }
 
 double Player::speed_for_bend(double radius) const {
-  return 0.6 * std::sqrt(radius);
+  return 0.62 * std::sqrt(radius);
 }
 
 int Player::next_bend(int curridx) const {

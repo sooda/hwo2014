@@ -20,6 +20,7 @@ struct Player {
     {}
   Player() : Player(nullptr) {}
   double compute_throttle(const CarPosition& now) const;
+  double throttle_for_piece(const CarPosition& now, int lookahead) const;
   void update(const CarPosition& now);
   void estimate_coefs(const CarPosition& now);
   double throttle_for_speed(double speed) const;
