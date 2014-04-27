@@ -29,12 +29,14 @@ private:
   msg_vector on_crash(const jsoncons::json& data);
   msg_vector on_game_end(const jsoncons::json& data);
   msg_vector on_error(const jsoncons::json& data);
+  msg_vector on_your_car(const jsoncons::json& data);
 
   double compute_throttle(const CarPosition& now) const;
 
   Track track;
   Player mycar;
   int current_tick;
+  std::string mycolor;
 };
 
 #endif

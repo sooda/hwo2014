@@ -13,7 +13,8 @@ game_logic::game_logic()
       { "carPositions", &game_logic::on_car_positions },
       { "crash", &game_logic::on_crash },
       { "gameEnd", &game_logic::on_game_end },
-      { "error", &game_logic::on_error }
+      { "error", &game_logic::on_error },
+      { "yourCar", &game_logic::on_your_car }
     },
     track { {}, { 0.0 }, 0 },
     mycar(),
@@ -100,13 +101,14 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
   std::cout << "Position tick";
 
   auto positions = data.as<std::vector<CarPosition>>();
+  CarPosition now;
   for (CarPosition& p: positions) {
     std::cout << " " << p.name << ":" << p.color
       << "=(" << p.pieceIndex << "," << p.inPieceDistance << ")";
+    if (p.color == mycolor)
+      now = p;
   }
   std::cout << std::endl;
-
-  CarPosition& now = positions[0]; // XXX parse my color
 
   double lanedist = track.lanedist[now.startLane];
   double angspeed = mycar.prev.angle - now.angle;
@@ -175,4 +177,10 @@ game_logic::msg_vector game_logic::on_error(const jsoncons::json& data)
 {
   std::cout << "Error: " << data.to_string() << std::endl;
   return { make_ping() };
+}
+
+game_logic::msg_vector game_logic::on_your_car(const jsoncons::json& data)
+{
+  mycolor = data["color"].as<std::string>();
+  return { };
 }
