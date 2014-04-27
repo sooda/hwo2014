@@ -25,7 +25,8 @@ void Player::estimate_coefs(const CarPosition& now) {
 
     power = x1 / initial_thrust; // v += power * thrust, initially v zero so no drag
     drag = (v2 - x1) / x1; // v2 = drag * v1 + accel, accel = increase in one step = x1
-    std::cout << "COEF: p=" << power << " d=" << drag << std::endl;
+    double max = power / (1 - drag);
+    std::cout << "COEF: p=" << power << " d=" << drag << " maxspd=" << max << std::endl;
   }
 }
 
