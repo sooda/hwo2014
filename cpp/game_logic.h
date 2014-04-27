@@ -13,6 +13,21 @@ struct Player {
   CarPosition prev;
   double tottravel;
   int nticks;
+
+  double power, drag;
+  double curspeed;
+
+
+  Player() : prev{ "", "", 0.0, 0, 0.0, 0, 0 },
+    tottravel(0.0), nticks(0),
+    power(0.0), drag(0.0), curspeed(0.0)
+    {}
+  double compute_throttle() const;
+  void update(const Track& track, const CarPosition& now);
+  void estimate_coefs(const CarPosition& now);
+  double throttle_for_speed(double speed) const;
+  double compute_travel(const Track& track, const CarPosition& now) const;
+  double topspeed() const;
 };
 
 class game_logic

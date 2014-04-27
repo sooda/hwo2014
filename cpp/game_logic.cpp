@@ -1,5 +1,6 @@
 #include "game_logic.h"
 #include "protocol.h"
+#include <cmath>
 
 using namespace hwo_protocol;
 
@@ -15,7 +16,7 @@ game_logic::game_logic()
       { "error", &game_logic::on_error }
     },
     track { {}, { 0.0 }, 0 },
-    mycar { { "", "", 0.0, 0, 0.0, 0, 0 }, 0.0, 0 },
+    mycar(),
     current_tick { -1 }
 {
 }
@@ -93,35 +94,75 @@ game_logic::msg_vector game_logic::on_game_start(const jsoncons::json& data)
   return { };
 }
 
-game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
-{
-  std::cout << "Position tick" << std::endl;
+void Player::update(const Track& track, const CarPosition& now) {
+  estimate_coefs(now);
+  curspeed = compute_travel(track, now);
+  tottravel += curspeed;
+}
 
-  auto positions = data.as<std::vector<CarPosition>>();
-  for (CarPosition& p: positions) {
-    if (&p != &positions.front())
-      std::cout << ", ";
-    std::cout << "(" << p.pieceIndex << "," << p.inPieceDistance << ")";
+void Player::estimate_coefs(const CarPosition& now) {
+  if (nticks == 2) {
+    double initial_thrust = 1.0;
+    double x1 = prev.inPieceDistance;
+    double x2 = now.inPieceDistance;
+    // v1 = x1, as x0 = 0
+    double v2 = x2 - x1;
+
+    power = x1 / initial_thrust; // v += power * thrust, initially v zero so no drag
+    drag = (v2 - x1) / x1; // v2 = drag * v1 + accel, accel = increase in one step = x1
   }
-  std::cout << std::endl;
+}
 
-  CarPosition& now = positions[0]; // XXX parse my color
+double Player::compute_travel(const Track& track, const CarPosition& now) const {
   // TODO lane switching
   double lanedist = track.lanedist[now.startLane];
 
   double travel;
-  if (now.pieceIndex == mycar.prev.pieceIndex) {
-    travel = now.inPieceDistance - mycar.prev.inPieceDistance;
+  if (now.pieceIndex == prev.pieceIndex) {
+    travel = now.inPieceDistance - prev.inPieceDistance;
   } else {
     // changed piece between ticks
-    double last_remaining = track.track[mycar.prev.pieceIndex].travel(lanedist) - mycar.prev.inPieceDistance;
+    double last_remaining = track.track[prev.pieceIndex].travel(lanedist) - prev.inPieceDistance;
     double in_this = now.inPieceDistance;
     travel = last_remaining + in_this;
   }
-  double ticktime = 1.0 / 60;
-  double speed = travel / ticktime;
+  return travel;
+}
+
+double Player::compute_throttle() const {
+  return throttle_for_speed((nticks / 200) * topspeed() / 10.0);
+}
+
+double Player::throttle_for_speed(double speed) const {
+  double thr = (speed - drag * curspeed) / power;
+  return std::min(std::max(thr, 0.0), 1.0);
+}
+
+double Player::topspeed() const {
+  // v_n+1 = v_n - (1-d)v_n + p*t
+  //     0 =      -(1-d)v_n + p*t
+  return power * 1.0 / (1 - drag);
+}
+
+game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
+{
+  std::cout << "Position tick";
+
+  auto positions = data.as<std::vector<CarPosition>>();
+  for (CarPosition& p: positions) {
+    std::cout << " " << p.name << ":" << p.color
+      << "=(" << p.pieceIndex << "," << p.inPieceDistance << ")";
+  }
+  std::cout << std::endl;
+
+  CarPosition& now = positions[0]; // XXX parse my color
+
+  double lanedist = track.lanedist[now.startLane];
   double angspeed = mycar.prev.angle - now.angle;
-  mycar.tottravel += travel;
+
+  mycar.update(track, now);
+
+  double throttle = compute_throttle();
 
   std::cout
     << "ticks " << mycar.nticks
@@ -129,15 +170,20 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
     << ", current travel " << track.track[now.pieceIndex].travel(lanedist)
     << ", piece travel " << now.inPieceDistance
     << ", total traveled: " << mycar.tottravel
-    << ", this travel: " << travel
-    << ", speed: " << speed
+    << ", this speed: " << mycar.curspeed
     << ", angle: " << now.angle
     << ", angular speed: " << angspeed
+    << ", throttle: " << throttle
     << std::endl;
 
-  std::cerr << mycar.nticks << " " << mycar.tottravel << " " << travel << " " << speed << " " << now.pieceIndex << " " << now.angle << " " << angspeed << std::endl;
-
-  double throttle = compute_throttle();
+  std::cerr << mycar.nticks
+    << " " << mycar.tottravel
+    << " " << mycar.curspeed
+    << " " << now.pieceIndex
+    << " " << now.angle
+    << " " << angspeed
+    << " " << throttle
+    << std::endl;
 
   mycar.prev = now;
   mycar.nticks++;
@@ -151,9 +197,15 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
 
 double game_logic::compute_throttle() const
 {
+  if (mycar.nticks < 2)
+    return 1.0; // for coef estimation
+  else
+    return mycar.compute_throttle();
+#if 0
   int estim_interval = 10 * 60;
   double speed = std::min((mycar.nticks / estim_interval + 1) / 10.0, 0.7);
   return mycar.nticks%estim_interval < estim_interval/2 ? speed : 0.0;
+#endif
 }
 
 game_logic::msg_vector game_logic::on_crash(const jsoncons::json& data)
