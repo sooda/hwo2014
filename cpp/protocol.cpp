@@ -42,4 +42,8 @@ namespace hwo_protocol
     return req;
   }
 
+  jsoncons::json make_lane_change(const std::string& dir)
+  {
+    return make_request("switchLane", dir);
+  }
 }  // namespace hwo_protocol

@@ -18,7 +18,10 @@ game_logic::game_logic()
     },
     track { {}, { 0.0 }, 0 },
     mycar(),
-    current_tick { -1 }
+    current_tick { -1 },
+    mycolor(""),
+    lane_gonna_change(false),
+    lane_changing(true)
 {
 }
 
@@ -113,6 +116,14 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
   double lanedist = track.lanedist[now.startLane];
   double angspeed = mycar.prev.angle - now.angle;
 
+  if (now.startLane != now.endLane)
+    lane_changing = true;
+
+  if (now.startLane == now.endLane && lane_changing) {
+    lane_changing = false;
+    lane_gonna_change = false;
+  }
+
   mycar.update(now);
 
   double throttle = compute_throttle(now);
@@ -138,14 +149,70 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
     << " " << throttle
     << std::endl;
 
+  jsoncons::json msg = make_throttle(throttle, mycar.nticks);
+  if (mycar.nticks >= 2 && !lane_gonna_change) {
+    int lane_change = need_lane_change(now);
+    if (lane_change) {
+      msg = make_lane_change(lane_change == -1 ? "Left" : "Right");
+      lane_gonna_change = true;
+    }
+  }
+
   mycar.prev = now;
   mycar.nticks++;
 
   // first positions may come before start
   if (current_tick == -1)
     return {};
+  return { msg };
+}
 
-  return { make_throttle(throttle, mycar.nticks - 1) };
+int game_logic::need_lane_change(const CarPosition& now) const {
+  // predict if should change the lane to left or right before a turn.
+  // does not take into account any lengths or such, so may decide wrong
+  // e.g. if there is a longer bend just after the next one
+
+  int next_switch = 0;
+  bool target_right = false;
+
+  for (size_t i = 1; i < track.track.size() - 2; i++) {
+    size_t n = (now.pieceIndex + i) % track.track.size();
+    const Piece& p = track.track[n];
+
+    if (p.switch_ && next_switch == 0) {
+      next_switch = i;
+    }
+    // bend could happen in this curve too
+    if (next_switch != 0 && p.angle != 0.0) {
+      // positive angle is for right turns
+      target_right = track.track[n].angle > 0.0;
+      break;
+    }
+  }
+
+  if (next_switch != 0) {
+    // can switch because there is a switch piece
+    //
+    // positive lane dist is to the right, thus max marks the rightmost, min leftmost
+    int min_lane = 0;
+    int max_lane = track.nlanes-1;
+
+    // we should probably sort these or assume that they are in order?
+    for (int i = 0; i < track.nlanes; i++) {
+      if (track.lanedist[i] < track.lanedist[min_lane])
+        min_lane = i;
+      if (track.lanedist[i] > track.lanedist[max_lane])
+        max_lane = i;
+    }
+
+    if (!target_right && track.lanedist[now.endLane] > track.lanedist[min_lane])
+    { std::cout << "LANELEFT:min="<<min_lane<<",max="<<max_lane<<",cur="<<now.endLane<<" nextsw="<<now.pieceIndex+next_switch<<std::endl;
+      return -1; }
+    else if (target_right && track.lanedist[now.endLane] < track.lanedist[max_lane])
+    { std::cout << "LANERIGHT:min="<<min_lane<<",max="<<max_lane<<",cur="<<now.endLane<<" nextsw="<<now.pieceIndex+next_switch<<std::endl;
+      return 1; }
+  }
+  return 0;
 }
 
 double game_logic::compute_throttle(const CarPosition& now) const

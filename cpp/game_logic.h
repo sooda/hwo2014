@@ -32,11 +32,14 @@ private:
   msg_vector on_your_car(const jsoncons::json& data);
 
   double compute_throttle(const CarPosition& now) const;
+  int need_lane_change(const CarPosition& now) const;
 
   Track track;
   Player mycar;
   int current_tick;
   std::string mycolor;
+
+  bool lane_gonna_change, lane_changing;
 };
 
 #endif

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <jsoncons/json.hpp>
 #include <vector>
+#include <array>
 
 struct Piece {
   double length; // straight
