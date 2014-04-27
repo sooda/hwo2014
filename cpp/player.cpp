@@ -58,12 +58,16 @@ double Player::compute_throttle(const CarPosition& now) const {
 double Player::dist_to_piece(const CarPosition& now, int target) const {
   if (now.pieceIndex == target)
     return 0.0;
-  double dist = now.inPieceDistance;
+
+  double lanedist = track->lanedist[now.startLane]; // close enough estimate to hold current lane
+  double dist = track->track[now.pieceIndex].travel(lanedist) - now.inPieceDistance;
+
   int idx = (now.pieceIndex + 1) % track->track.size();
   while (idx != target) {
-    dist += track->track[idx].travel(-20.0); // TODO: get current fromcenter or something, now a conservative guess
+    dist += track->track[idx].travel(lanedist);
     idx = (idx + 1) % track->track.size();
   }
+
   return dist;
 }
 
