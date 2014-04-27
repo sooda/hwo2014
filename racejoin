@@ -1,0 +1,8 @@
+#!/bin/bash -e
+
+# usage sample: ./racejoin germany pwd 6 sooda
+
+source ./serverconf
+source ./config
+BOTNAME=$4
+(cd $PL && ./run $BOTSERVERNAME $BOTSERVERPORT "$BOTNAME" "$BOTKEY" $1 $2 $3)

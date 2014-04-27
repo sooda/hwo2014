@@ -1,5 +1,6 @@
 #include "protocol.h"
 
+#include <sstream>
 namespace hwo_protocol
 {
 
@@ -28,6 +29,18 @@ namespace hwo_protocol
     data["trackName"] = track;
     data["carCount"] = 1;
     return make_request("createRace", data);
+  }
+
+  jsoncons::json make_join_race(const std::string& name, const std::string& key, const std::string& track, const std::string& pwd, const std::string& carcount)
+  {
+    jsoncons::json data;
+    data["botId"] = jsoncons::json();
+    data["botId"]["name"] = name;
+    data["botId"]["key"] = key;
+    data["trackName"] = track;
+    data["password"] = pwd;
+    data["carCount"] = std::stoi(carcount);
+    return make_request("joinRace", data);
   }
 
   jsoncons::json make_ping()
