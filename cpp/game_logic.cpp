@@ -172,8 +172,9 @@ int game_logic::need_lane_change(const CarPosition& now) const {
   // does not take into account any lengths or such, so may decide wrong
   // e.g. if there is a longer bend just after the next one
 
-  int next_switch = 0;
-  bool target_right = false;
+  size_t next_switch = 0, then_switch = 0;
+  double left_travel = 0.0, right_travel = 0.0;
+  int nbends = 0;
 
   for (size_t i = 1; i < track.track.size() - 2; i++) {
     size_t n = (now.pieceIndex + i) % track.track.size();
@@ -181,16 +182,24 @@ int game_logic::need_lane_change(const CarPosition& now) const {
 
     if (p.switch_ && next_switch == 0) {
       next_switch = i;
-    }
-    // bend could happen in this curve too
-    if (next_switch != 0 && p.angle != 0.0) {
-      // positive angle is for right turns
-      target_right = track.track[n].angle > 0.0;
+    } else if (p.switch_ && next_switch != 0) {
+      for (size_t j = next_switch; j < i; j++) { // or: j <= i?
+        size_t m = (now.pieceIndex + j) % track.track.size();
+        const Piece& q = track.track[m];
+        left_travel  += q.travel(track.lanedist[std::max(now.endLane-1, 0)]);
+        right_travel += q.travel(track.lanedist[std::min(now.endLane+1, track.nlanes-1)]);
+        if (q.length == 0.0)
+          nbends++;
+      }
+      then_switch = i;
       break;
     }
   }
+  std::cout << "UGUU " << next_switch << " " << then_switch << " " << left_travel << " " << right_travel << std::endl;
 
-  if (next_switch != 0) {
+  bool target_right = right_travel < left_travel;
+
+  if (next_switch != 0 && nbends != 0) {
     // can switch because there is a switch piece
     //
     // positive lane dist is to the right, thus max marks the rightmost, min leftmost
