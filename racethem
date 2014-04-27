@@ -2,4 +2,5 @@
 ./race-keimola 2>stderr.keimola | tee stdout.keimola &
 ./race-germany 2>stderr.germany | tee stdout.germany &
 ./race-usa 2>stderr.usa | tee stdout.usa &
+./race-france 2>stderr.france | tee stdout.france &
 wait
