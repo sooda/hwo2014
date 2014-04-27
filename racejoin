@@ -2,7 +2,7 @@
 
 # usage sample: ./racejoin germany pwd 6 sooda
 
-source ./serverconf
-source ./config
+source $(dirname $0)/serverconf
+source $(dirname $0)/config
 BOTNAME=$4
-(cd $PL && ./run $BOTSERVERNAME $BOTSERVERPORT "$BOTNAME" "$BOTKEY" $1 $2 $3)
+$(dirname $0)/$PL/plusbot $BOTSERVERNAME $BOTSERVERPORT "$BOTNAME" "$BOTKEY" $1 $2 $3
