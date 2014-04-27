@@ -150,7 +150,7 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
     << std::endl;
 
   jsoncons::json msg = make_throttle(throttle, mycar.nticks);
-  if (mycar.nticks >= 2 && !lane_gonna_change) {
+  if (mycar.nticks >= Player::COEF_MEAS_TICKS && !lane_gonna_change) {
     int lane_change = need_lane_change(now);
     if (lane_change) {
       msg = make_lane_change(lane_change == -1 ? "Left" : "Right");
@@ -158,8 +158,7 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
     }
   }
 
-  mycar.prev = now;
-  mycar.nticks++;
+  mycar.endtick(now);
 
   // first positions may come before start
   if (current_tick == -1)
@@ -226,7 +225,7 @@ int game_logic::need_lane_change(const CarPosition& now) const {
 
 double game_logic::compute_throttle(const CarPosition& now) const
 {
-  if (mycar.nticks < 2)
+  if (mycar.nticks < Player::COEF_MEAS_TICKS)
     return 1.0; // for coef estimation
   else
     return mycar.compute_throttle(now);

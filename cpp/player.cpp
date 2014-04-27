@@ -1,21 +1,31 @@
 #include "player.h"
 
 void Player::update(const CarPosition& now) {
-  estimate_coefs(now);
+  if (nticks == 0) {
+    // HACK. CI starts in random positions
+    // don't mess up speed etc starting in the middle of something
+    // just get prev ok during this tick
+    return;
+  }
+
   curspeed = compute_travel(now);
+  estimate_coefs(now);
+  prevspeed = curspeed;
   tottravel += curspeed;
 }
 
 void Player::estimate_coefs(const CarPosition& now) {
-  if (nticks == 2) {
+  if (nticks == COEF_MEAS_TICKS) {
     double initial_thrust = 1.0;
-    double x1 = prev.inPieceDistance;
-    double x2 = now.inPieceDistance;
+    // start pos is not always 0; speed in tick delta units
+    double x1 = prevspeed;//prev.inPieceDistance;
+    double x2 = prevspeed+curspeed;//now.inPieceDistance;
     // v1 = x1, as x0 = 0
     double v2 = x2 - x1;
 
     power = x1 / initial_thrust; // v += power * thrust, initially v zero so no drag
     drag = (v2 - x1) / x1; // v2 = drag * v1 + accel, accel = increase in one step = x1
+    std::cout << "COEF: p=" << power << " d=" << drag << std::endl;
   }
 }
 
@@ -117,3 +127,10 @@ int Player::next_bend(int curridx) const {
     curridx = (curridx + 1) % track->track.size();
   return curridx;
 }
+
+void Player::endtick(const CarPosition& now) {
+  prev = now;
+  prevspeed = curspeed;
+  nticks++;
+}
+
