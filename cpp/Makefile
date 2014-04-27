@@ -1,4 +1,4 @@
-BOT_SRCS := connection.cpp game_logic.cpp main.cpp protocol.cpp game_objs.cpp
+BOT_SRCS := connection.cpp game_logic.cpp main.cpp protocol.cpp game_objs.cpp player.cpp
 TEST_SRCS := game_objs.cpp tests.cpp
 CXX := g++
 
