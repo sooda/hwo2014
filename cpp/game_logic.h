@@ -30,6 +30,7 @@ private:
   msg_vector on_game_end(const jsoncons::json& data);
   msg_vector on_error(const jsoncons::json& data);
   msg_vector on_your_car(const jsoncons::json& data);
+  msg_vector on_turbo_avail(const jsoncons::json& data);
 
   double compute_throttle(const CarPosition& now) const;
   int need_lane_change(const CarPosition& now) const;
@@ -40,6 +41,9 @@ private:
   std::string mycolor;
 
   bool lane_gonna_change, lane_changing;
+
+  int turbo_ticks;
+  double turbo_factor;
 };
 
 #endif

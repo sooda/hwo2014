@@ -14,7 +14,8 @@ game_logic::game_logic()
       { "crash", &game_logic::on_crash },
       { "gameEnd", &game_logic::on_game_end },
       { "error", &game_logic::on_error },
-      { "yourCar", &game_logic::on_your_car }
+      { "yourCar", &game_logic::on_your_car },
+      { "turboAvailable", &game_logic::on_turbo_avail }
     },
     track { {}, { 0.0 }, 0 },
     mycar(),
@@ -257,5 +258,13 @@ game_logic::msg_vector game_logic::on_error(const jsoncons::json& data)
 game_logic::msg_vector game_logic::on_your_car(const jsoncons::json& data)
 {
   mycolor = data["color"].as<std::string>();
+  return { };
+}
+
+game_logic::msg_vector game_logic::on_turbo_avail(const jsoncons::json& data)
+{
+  turbo_ticks = data["turboDurationTicks"].as<int>();
+  turbo_factor = data["turboFactor"].as<double>();
+  std::cout << "ICANN HAZ TURBO?? dur=" << turbo_ticks << " fact=" << turbo_factor << std::endl;
   return { };
 }
