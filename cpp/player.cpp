@@ -46,6 +46,28 @@ double Player::compute_travel(const CarPosition& now) const {
   return travel;
 }
 
+int Player::best_turbo_start() const {
+  // just find longest straight, sub-optimal
+  // TODO use given turbo factor to see how long to reserve for braking
+  int in_row = 0, this_start = 0;
+  int longest_row = 0, longest_start = 0;
+  int n = track->track.size();
+  for (int i = 0; i < 2 * n; i++) {
+    const Piece& p = track->track[i % n];
+    if (p.length != 0.0) {
+      in_row++;
+      if (in_row > longest_row) {
+        longest_row = in_row;
+        longest_start = this_start;
+      }
+    } else {
+      in_row = 0;
+      this_start = i + 1;
+    }
+  }
+  return longest_start % n;
+}
+
 double Player::compute_throttle(const CarPosition& now) const {
 #if 0
   return throttle_for_speed((nticks / 200) * topspeed() / 10.0);
@@ -97,14 +119,14 @@ double Player::dist_to_piece(const CarPosition& now, int target) const {
 }
 
 double Player::throttle_for_speed(double speed) const {
-  double thr = (speed - drag * curspeed) / power;
+  double thr = (speed - drag * curspeed) / (power * turbofactor);
   return std::min(std::max(thr, 0.0), 1.0);
 }
 
 double Player::topspeed() const {
   // v_n+1 = v_n - (1-d)v_n + p*t
   //     0 =      -(1-d)v_n + p*t
-  return power * 1.0 / (1 - drag);
+  return power * turbofactor * 1.0 / (1 - drag);
 }
 
 double Player::brake_travel(double startspeed, int ticks) const {
@@ -135,3 +157,10 @@ void Player::endtick(const CarPosition& now) {
   nticks++;
 }
 
+void Player::set_turbo(double factor) {
+  turbofactor = factor;
+}
+
+void Player::reset_turbo() {
+  turbofactor = 1.0;
+}

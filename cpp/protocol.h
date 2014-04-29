@@ -14,6 +14,7 @@ namespace hwo_protocol
   jsoncons::json make_ping();
   jsoncons::json make_throttle(double throttle, int tick);
   jsoncons::json make_lane_change(const std::string& dir);
+  jsoncons::json make_turbo(const std::string& msg);
 }
 
 #endif

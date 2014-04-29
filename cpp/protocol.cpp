@@ -59,4 +59,9 @@ namespace hwo_protocol
   {
     return make_request("switchLane", dir);
   }
+
+  jsoncons::json make_turbo(const std::string& msg)
+  {
+    return make_request("turbo", msg);
+  }
 }  // namespace hwo_protocol

@@ -15,14 +15,18 @@ game_logic::game_logic()
       { "gameEnd", &game_logic::on_game_end },
       { "error", &game_logic::on_error },
       { "yourCar", &game_logic::on_your_car },
-      { "turboAvailable", &game_logic::on_turbo_avail }
+      { "turboAvailable", &game_logic::on_turbo_avail },
+      { "turboStart", &game_logic::on_turbo_start },
+      { "turboEnd", &game_logic::on_turbo_end }
     },
     track { {}, { 0.0 }, 0 },
     mycar(),
     current_tick { -1 },
     mycolor(""),
     lane_gonna_change(false),
-    lane_changing(true)
+    lane_changing(true),
+
+    turbo_ticks(0), turbo_factor(0.0), turbostartpos(-1)
 {
 }
 
@@ -40,7 +44,7 @@ game_logic::msg_vector game_logic::react(const jsoncons::json& msg)
   if (action_it != action_map.end())
   {
     msg_vector act = (action_it->second)(this, data);
-    if (tick != -1 && act.size() == 0) {
+    if (tick != -1 && act.size() == 0 && msg_type != "turboAvailable" && msg_type != "turboStart" && msg_type != "turboEnd") {
       std::cout << "BUG: got tick but did no actions" << std::endl;
       act = { make_ping() };
     }
@@ -158,6 +162,11 @@ game_logic::msg_vector game_logic::on_car_positions(const jsoncons::json& data)
       lane_gonna_change = true;
     }
   }
+  if (mycar.nticks >= Player::COEF_MEAS_TICKS && now.pieceIndex == turbostartpos) {
+    msg = make_turbo("Pow pow pow pow pow i can haz the speeds");
+    turbostartpos = -1;
+    std::cout << "PEW PEW TURBO BUTTON" << std::endl;
+  }
 
   mycar.endtick(now);
 
@@ -261,10 +270,38 @@ game_logic::msg_vector game_logic::on_your_car(const jsoncons::json& data)
   return { };
 }
 
+// these contain the gametick field but do not need a response?
+// a carpositions with same tick follows
 game_logic::msg_vector game_logic::on_turbo_avail(const jsoncons::json& data)
 {
   turbo_ticks = data["turboDurationTicks"].as<int>();
   turbo_factor = data["turboFactor"].as<double>();
-  std::cout << "ICANN HAZ TURBO?? dur=" << turbo_ticks << " fact=" << turbo_factor << std::endl;
+  turbostartpos = mycar.best_turbo_start();
+  std::cout << "CAN HAZ TURBO?? dur="
+    << turbo_ticks << " fact=" << turbo_factor
+    << " starting at " << turbostartpos << std::endl;
+  return { };
+}
+
+game_logic::msg_vector game_logic::on_turbo_start(const jsoncons::json& data)
+{
+  std::string color = data["color"].as<std::string>();
+  if (color == mycolor) {
+    std::cout << "PEW PEW" << std::endl;
+    mycar.set_turbo(turbo_factor);
+    turbo_ticks = 0;
+    turbo_factor = 0.0;
+    turbostartpos = -1;
+  }
+  return { };
+}
+
+game_logic::msg_vector game_logic::on_turbo_end(const jsoncons::json& data)
+{
+  std::string color = data["color"].as<std::string>();
+  if (color == mycolor) {
+    std::cout << "NO MORE PEW PEW" << std::endl;
+    mycar.reset_turbo();
+  }
   return { };
 }

@@ -19,6 +19,8 @@ struct Player {
     tottravel(0.0), nticks(0),
     power(0.0), drag(0.0), curspeed(0.0), prevspeed(0.0),
     track(track)
+
+    ,turbofactor(0.0)
     {}
   Player() : Player(nullptr) {}
   double compute_throttle(const CarPosition& now) const;
@@ -34,6 +36,12 @@ struct Player {
   int ticks_to_slow_down(double cur, double target) const;
   int next_bend(int curridx) const;
   double dist_to_piece(const CarPosition& now, int target) const;
+  int best_turbo_start() const;
+
+  void set_turbo(double factor);
+  void reset_turbo();
+
+  double turbofactor;
 };
 
 #endif
